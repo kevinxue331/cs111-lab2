@@ -22,8 +22,8 @@ struct process
 
   /* Additional fields here */
   u32 remaining_time;
-  u32 starting_time;
-  bool finished;
+  //u32 starting_time;
+  //bool finished;
   bool started;
   /* End of "Additional fields here" */
 };
@@ -184,37 +184,33 @@ int main(int argc, char *argv[])
   while(finished==false){
     for (int i=0; i<size; i++){
       if (data[i].arrival_time ==start_time) TAILQ_INSERT_TAIL(&list, &data[i], pointers);
-      
     }
-    //current = TAILQ_FIRST(&list);
+    //after the slice is over add the process back to the queue
     if(slice_time==quantum_length+1&&current->remaining_time>0){
-      
       TAILQ_INSERT_TAIL(&list, current, pointers);
       slice_time= 1;
     }
-
+// at the start of each slice pull the first and remove it from the queue to run
     if(slice_time==1){
       if (TAILQ_EMPTY(&list)) return -1;
       current=TAILQ_FIRST(&list);
       TAILQ_REMOVE(&list, current, pointers);
     }
+    //calculate the response time for each process when it first runs
     if (!current->started) {
           total_response_time = total_response_time + total_time - current->arrival_time;
           current->started = true;
     }
+    //if the process is mid slice
     if(slice_time<quantum_length+1){
-
-      if (current->remaining_time > 0) {
-          current->remaining_time = current->remaining_time - 1;
-          total_time++;
-      }
-
-      // If process is finished, calculate its wait time
       if (current->remaining_time == 0) {
         total_waiting_time = total_waiting_time + total_time - current->arrival_time - current->burst_time;          
         slice_time = 0;
       }
-      
+      else{
+        current->remaining_time--;
+        total_time++;
+      }
     }
     start_time++;
     slice_time++;
