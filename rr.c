@@ -165,28 +165,38 @@ int main(int argc, char *argv[])
 
   /* Your code here */
   bool finished = false;
-  u32 current_time = 0;
-  u32 slice_time=0;
-  u32 total_time =0;
-  current_time = data[0].arrival_time;
+  u32 start_time = data[0].arrival_time;;
+  u32 slice_time=1;
+  u32 total_time =start_time;
+ 
   struct process *current;
   for(int i=0; i<size; i++){
+    current= &data[i];
     data[i].remaining_time = data[i].burst_time;
-    if(data[i].arrival_time < current_time){
-      current_time=data[i].arrival_time;
+    data[i].started = false;
+    if(data[i].arrival_time < start_time){
+      start_time=data[i].arrival_time;
     }
   }
+  //struct process *new;
+  if (quantum_length == 0) finished = true;
+
   while(finished==false){
     for (int i=0; i<size; i++){
-      if (data[i].arrival_time == current_time){
-        TAILQ_INSERT_TAIL(&list, &data[i], pointers);
-      }
+      if (data[i].arrival_time ==start_time) TAILQ_INSERT_TAIL(&list, &data[i], pointers);
+      
     }
-    current = TAILQ_FIRST(&list);
-    if(slice_time==quantum_length&&current->remaining_time>0){
-      TAILQ_REMOVE(&list, current, pointers);
+    //current = TAILQ_FIRST(&list);
+    if(slice_time==quantum_length+1&&current->remaining_time>0){
+      
       TAILQ_INSERT_TAIL(&list, current, pointers);
-      slice_time= 0;
+      slice_time= 1;
+    }
+
+    if(slice_time==1){
+      if (TAILQ_EMPTY(&list)) return -1;
+      current=TAILQ_FIRST(&list);
+      TAILQ_REMOVE(&list, current, pointers);
     }
     if (!current->started) {
           total_response_time = total_response_time + total_time - current->arrival_time;
@@ -194,31 +204,33 @@ int main(int argc, char *argv[])
     }
     if(slice_time<quantum_length+1){
 
+      if (current->remaining_time > 0) {
+          current->remaining_time = current->remaining_time - 1;
+          total_time++;
+      }
+
+      // If process is finished, calculate its wait time
       if (current->remaining_time == 0) {
-          total_waiting_time = total_waiting_time + total_time - current->arrival_time - current->burst_time;
-          slice_time = 0;
+        total_waiting_time = total_waiting_time + total_time - current->arrival_time - current->burst_time;          
+        slice_time = 0;
       }
-      else{
-        total_time++;
-        current->remaining_time--;
-      }
-      finished = true;
+      
+    }
+    start_time++;
+    slice_time++;
+    finished = true;
       for(int i=0;i<size;i++){
+       // printf("%d",data[i].remaining_time);
         if(data[i].remaining_time>0){
           finished = false;
+          break;
         }
       }
-    }
-    current_time++;
-    slice_time++;
-
-
-  finished = true;
+    
+  //finished = true;
   }
   /* End of "Your code here" */
-  for(int i=0; i<size; i++){
-    printf("%d",data[i].remaining_time);
-  }
+  
   printf("Average waiting time: %.2f\n", (float)total_waiting_time / (float)size);
   printf("Average response time: %.2f\n", (float)total_response_time / (float)size);
 

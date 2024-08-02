@@ -1,28 +1,30 @@
 # You Spin Me Round Robin
 
-TODO
+Implementation of round robin scheuling in C using an input of a text file containing start time and burst length
 
 ## Building
 
 ```shell
-TODO
+make
 ```
 
 ## Running
 
-cmd for running TODO
+cmd for running
 ```shell
-TODO
+./rr [input file] [burst length]
 ```
 
-results TODO
+results 
 ```shell
-TODO
+./rr processes.txt 3
+Average waiting time: 7.00
+Average response time: 2.75
 
 ```
 
 ## Cleaning up
 
 ```shell
-TODO
+make clean
 ```
