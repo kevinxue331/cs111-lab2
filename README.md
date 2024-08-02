@@ -1,6 +1,6 @@
 # You Spin Me Round Robin
 
-Implementation of round robin scheuling in C using an input of a text file containing start time and burst length
+Implementation of round robin scheuling in C using an input of a text file containing start time and burst length to calculate average waiting and responce time
 
 ## Building
 

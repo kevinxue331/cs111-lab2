@@ -201,16 +201,19 @@ int main(int argc, char *argv[])
           total_response_time = total_response_time + total_time - current->arrival_time;
           current->started = true;
     }
-    //if the process is mid slice
+    
     if(slice_time<quantum_length+1){
+      if (current->remaining_time > 0) {
+          current->remaining_time = current->remaining_time - 1;
+          total_time++;
+      }
+
+     
       if (current->remaining_time == 0) {
         total_waiting_time = total_waiting_time + total_time - current->arrival_time - current->burst_time;          
         slice_time = 0;
       }
-      else{
-        current->remaining_time--;
-        total_time++;
-      }
+      
     }
     start_time++;
     slice_time++;
