@@ -165,34 +165,55 @@ int main(int argc, char *argv[])
 
   /* Your code here */
   bool finished = false;
-  u32 start_time = data[0].arrival_time;;
-  u32 slice_time=1;
-  u32 total_time =start_time;
+  
  
   struct process *current;
+  struct process *first;
+  bool unordered = false;
+  //check for the first process start time
+  u32 start_time = data[0].arrival_time;;
   for(int i=0; i<size; i++){
     current= &data[i];
     data[i].remaining_time = data[i].burst_time;
     data[i].started = false;
     if(data[i].arrival_time < start_time){
       start_time=data[i].arrival_time;
+      current = &data[i];
+      unordered = true;
     }
   }
+  if(unordered){
+    for(int i=0;i<size;i++){
+      if(data[i].arrival_time==start_time){
+        current = &data[i];
+        break;
+      }
+    }
+  }
+  
+  u32 slice_time=1;
+  u32 total_time =start_time;
+  //printf("%d\n",current->arrival_time);
+  //current=&data[size-1];
   //struct process *new;
   if (quantum_length == 0) finished = true;
 
   while(finished==false){
+    //first add new tasks before finishing current task
     for (int i=0; i<size; i++){
-      if (data[i].arrival_time ==start_time) TAILQ_INSERT_TAIL(&list, &data[i], pointers);
+      if (data[i].arrival_time ==total_time) TAILQ_INSERT_TAIL(&list, &data[i], pointers);
     }
     //after the slice is over add the process back to the queue
     if(slice_time==quantum_length+1&&current->remaining_time>0){
       TAILQ_INSERT_TAIL(&list, current, pointers);
       slice_time= 1;
     }
-// at the start of each slice pull the first and remove it from the queue to run
+    // at the start of each slice pull the first and remove it from the queue to run
     if(slice_time==1){
-      if (TAILQ_EMPTY(&list)) return -1;
+      if (TAILQ_EMPTY(&list)) {
+        total_time++;
+        continue;
+      }
       current=TAILQ_FIRST(&list);
       TAILQ_REMOVE(&list, current, pointers);
     }
@@ -201,25 +222,25 @@ int main(int argc, char *argv[])
           total_response_time = total_response_time + total_time - current->arrival_time;
           current->started = true;
     }
-    
+    //if slice is still running
     if(slice_time<quantum_length+1){
       if (current->remaining_time > 0) {
           current->remaining_time = current->remaining_time - 1;
           total_time++;
       }
-
-     
+     //if task if over calculate the waiting time fo
       if (current->remaining_time == 0) {
         total_waiting_time = total_waiting_time + total_time - current->arrival_time - current->burst_time;          
         slice_time = 0;
       }
       
     }
-    start_time++;
+    //start_time++;
     slice_time++;
     finished = true;
+    
       for(int i=0;i<size;i++){
-       // printf("%d",data[i].remaining_time);
+       //printf("%d",data[i].remaining_time);
         if(data[i].remaining_time>0){
           finished = false;
           break;
